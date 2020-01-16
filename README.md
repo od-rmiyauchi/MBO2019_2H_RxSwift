@@ -1,24 +1,22 @@
 # RxSwiftまとめ
 
 ## RxSwiftとは？
-Reactive ExtensionsをSwiftのライブラリです。
-データバインドが簡単に書け、非同期処理も実装しやすい特徴があります。
-DelegateやKVOで記述していた箇所がRxSwiftで実装できるようになります。
-　https://github.com/ReactiveX/RxSwift/blob/master/Documentation/Why.md
-※ Xcode11に導入されたCombineがありますが、対象がiOS13以降なので現状はRxSwiftが良いと思われます。
+Reactive ExtensionsをSwiftのライブラリであり、データバインドが簡単に書け、非同期処理も実装しやすい特徴があります。  
+DelegateやKVOで記述していた箇所がRxSwiftで実装できるようになります。  
+　https://github.com/ReactiveX/RxSwift/blob/master/Documentation/Why.md  
+※ Xcode11に導入されたCombineがありますが、対象がiOS13以降なので現状はRxSwiftが良いと思われます。  
 
-Reactive Extensionsの説明は省略し、RxSwiftの基本的な使い方に焦点を当てて説明します。
+今回はReactive Extensionsの説明を省略し、RxSwiftの基本的な使い方に焦点を当てて説明します。  
 
-イベント処理やデータバインドをRxSwiftで行うときはRxCocoaを使用すると簡単に実装できます。
+イベント処理やデータバインドをRxSwiftで行うときはRxCocoaを使用すると簡単に実装できます。  
 
 ## DisposableとDisposeBag
-Disposableのdisposeメソッドを呼ぶことで購読解除します。
-しかしモバイルアプリ開発の場合は画面破棄時など、オブジェクト破棄時に購読解除したいシーンが多いです。
-その仕組みを提供する機能がDisposeBagです。
-具体的にはsubscribe時にDisposeBagにDisposableを追加していって、
-＜要確認＞デストラクタ時に追加されたDisposableを全て購読解除します。
-画面破棄時に購読終了させる場合は、ViewControllerのクラス定数としてdisposeBagを宣言し、それをObservableに指定します。
-ただしDisposeBagを所持しているクラスがメモリに残り続ける場合（Singletonなど）は、自動で購読解除されないので注意が必要です。
+Disposableのdisposeメソッドを呼ぶことで購読解除します。  
+しかしモバイルアプリ開発の場合は画面破棄時など、オブジェクト破棄時に購読解除したいシーンが多いです。  
+その仕組みを提供する機能がDisposeBagです。  
+具体的にはsubscribe時にDisposeBagにDisposableを追加していって、デストラクタ時に追加されたDisposableを全て購読解除します。  
+画面破棄時に購読終了させる場合は、ViewControllerのクラス定数としてdisposeBagを宣言し、それをObservableに指定します。  
+ただしDisposeBagを所持しているクラスがメモリに残り続ける場合（Singletonなど）は、自動で購読解除されないので注意が必要です。  
 
 ## イベント処理
 ### Button
@@ -56,8 +54,8 @@ NotificationCenter.default.post(name: notificationName, object: "テスト")
 ```
 
 ### RxKeyboard
-RxKeyboardライブラリを使用すると、キーボードの表示時のViewのサイズや位置調整を簡単に実現できます。
-下記では、キーボード表示時にViewの高さをキーボードのサイズだけ縮小します。
+RxKeyboardライブラリを使用すると、キーボードの表示時のViewのサイズや位置調整を簡単に実現できます。  
+下記では、キーボード表示時にViewの高さをキーボードのサイズだけ縮小します。  
 ※ サードパーティキーボードの動作は未確認
 ```
 // サイズ調整したいViewのAutoLayout制約
@@ -76,15 +74,15 @@ func setRxKeyboard() {
 
 ## データバインド
 ### UI同士
-TextField.txtとLabel.txtをバインド
-orEmptyでTextFieldのテキストが空でない条件を追加できます
+TextField.txtとLabel.txtをバインド  
+orEmptyでTextFieldのテキストが空でない条件を追加できます  
 ```
 bindingTextField.rx.text.orEmpty
 	.bind(to: bindingLabel.rx.text)
 	.disposed(by: disposeBag)
 ```
 
-二つのUIを監視することも可能
+二つのUIを監視することも可能  
 下記では、二つのTextFieldの値を連結し(combine)、1つの文字列に変換した(map)後に、Labelに表示しています(bind)
 ```
 Observable
@@ -99,7 +97,7 @@ Observable
 ```
 
 ### 変数をUIにバインド
-変数をバインドすることも可能
+変数をバインドすることも可能  
 下記では、ViewModel.count変数の値(0以外)をLabelにバインドしています
 ```
 viewModel.count
@@ -113,20 +111,22 @@ viewModel.count
 
 ## 非同期処理
 ### Hot / Cold
-これまでのイベント処理やデータバインドは、値が変化したら即subscribeが実行されます。
-このようにsubscribeなしで自動的に実行されるものをHot Observableと呼びます。
-逆に購読処理（subscribe）を呼んでから処理が始まるものをCold Observableと呼びます。
-通信やDB関連の非同期処理は、処理開始を明示的に指定した方が扱いやすいため、Cold Observableで作成します。
+これまでのイベント処理やデータバインドは、値が変化したら購読処理が即実行されます。  
+このように処理が自動的に実行されるものをHot Observableと呼びます。  
+逆に 購読処理を始める明示的な関数(subscribe)を呼んでから処理が始まるものをCold Observableと呼びます。  
+通信やDB関連の非同期処理は、処理開始を明示的に指定した方が扱いやすいため、Cold Observableで作成します。  
 
 ### 非同期処理の例（Observable）
-ここではObservableを使った簡単な非同期処理の例を用いて説明します。
-例では、整数リスト[1, 2, 3, 4, 5]の各要素をEntityオブジェクトに変換することとします。
+ここではObservableを使った簡単な非同期処理の例を用いて説明します。  
+例では、整数リスト[1, 2, 3, 4, 5]の各要素をEntityオブジェクトに変換することとします。  
+```
 1 -> Entity (num=1)
 2 -> Entity (num=2)
 …
 5 -> Entity (num=5)
-この変換処理をサブスレッドで動作させます。
-※ 本来はリスト作成をfrom関数、変換処理をmap関数で十分ですが（下記別解を参照）、今回はあえてObservable生成から実装します。
+```
+この変換処理をサブスレッドで動作させます。  
+※ 本来はリスト作成をfrom関数、変換処理をmap関数で十分ですが（下記別解を参照）、今回はあえてObservable生成から実装します。  
 
 ```
 class ObservableExample {
@@ -186,18 +186,18 @@ class ObservableExample {
 <NSThread: 0x600002752c80>{number = 1, name = main} > onComplete
 ```
 
-Observable側の実装
-① createObservable関数ではObservableを作成しており、Observable.createに非同期にしたい処理を記述します。
-② ここでは関数の引数で受け取ったリスト内の整数をEntityオブジェクトに変換する処理を非同期にしています。
-③ 一つの要素に対して処理が完了するたびに、onNextを呼びます。こうすることでObserverに1つの要素の処理が完了したことが通知されます。
-④ 最後に全要素の処理が完了したことをonCompletedでObserverに通知します。
-また、下記のソースに記述しておりませんが、エラーが生じた場合はonErrorで通知します。
+- Observable側の実装  
+① createObservable関数ではObservableを作成しており、Observable.createに非同期にしたい処理を記述します。  
+② ここでは関数の引数で受け取ったリスト内の整数をEntityオブジェクトに変換する処理を非同期にしています。  
+③ 一つの要素に対して処理が完了するたびに、onNextを呼びます。こうすることでObserverに1つの要素の処理が完了したことが通知されます。  
+④ 最後に全要素の処理が完了したことをonCompletedでObserverに通知します。  
+また、下記のソースに記述しておりませんが、エラーが生じた場合はonErrorで通知します。  
 
-Observer側の実装
-⑤ Observable側の処理（今回はObservable.createで実装した変換処理）のスレッドをサブスレッドに指定
-⑥ Observaer側の処理（onNextやonComplete内の処理）のスレッドをメインスレッドに指定
-⑦ onNextは一つの要素について処理した後に呼ばれます
-⑧ onCompleteは全ての要素について処理した後に呼ばれます
+- Observer側の実装  
+⑤ Observable側の処理（今回はObservable.createで実装した変換処理）のスレッドをサブスレッドに指定  
+⑥ Observaer側の処理（onNextやonComplete内の処理）のスレッドをメインスレッドに指定  
+⑦ onNextは一つの要素について処理した後に呼ばれます  
+⑧ onCompleteは全ての要素について処理した後に呼ばれます  
 
 別解
 ```
@@ -207,15 +207,13 @@ return Observable.from(numArray)
 ```
 
 ### 通信処理の例（Single）
-今回は連続でリクエストを投げない場合、ObservableよりもSIngleが適しています。
-ObservableはonNextが複数回実行されることを想定していますが、
-SingleはonSuccess/onErrorの２パターンのみです。
-そのために１回だけリクエストを投げるようなAPIでは、
-SingleのほうがonNextを書かなくて済むので実装が簡単です。
+今回は連続でリクエストを投げない場合、ObservableよりもSIngleが適しています。  
+ObservableはonNextが複数回実行されることを想定していますが、SingleはonSuccess/onErrorの２パターンのみです。  
+そのために１回だけリクエストを投げるようなAPIでは、SingleのほうがonNextを書かなくて済むので実装が簡単です。  
 
-以下は天気予報APIを非同期で実行し、結果をTextViewに表示する例です。
-1. まずWeatherAPI.createForecastObservableでSingleの生成を実装します。
-　そしてこのSingleに対して非同期で実行したいWebAPI処理を実装します。
+以下は天気予報APIを非同期で実行し、結果をTextViewに表示する例です。  
+1. まずWeatherAPI.createForecastObservableでSingleの生成を実装します。  
+　そしてこのSingleに対して非同期で実行したいWebAPI処理を実装します。  
 
 ```
 class WeatherAPI {
@@ -251,16 +249,16 @@ class WeatherAPI {
 }
 ```
 
-2. WeatherClient.getForecastに、1で実装したSingleの購読処理を実装します。
-　購読処理をViewController側に実装すると冗長的になってしまい、可読性が下がると思われます。
-　そこで、成功と失敗用のクロージャを引数とする関数を用意し、その中で購読処理を実行するようにしました。
+2. WeatherClient.getForecastに、1で実装したSingleの購読処理を実装します。  
+　購読処理をViewController側に実装すると冗長的になってしまい、可読性が下がると思われます。  
+　そこで、成功と失敗用のクロージャを引数とする関数を用意し、その中で購読処理を実行するようにしました。  
 
-   subscribeOnでObservable側（WebAPI処理）のスレッドを指定し、
-　observerOnでObserver側（onSuccess, onError）のスレッドを指定します。
-　今回はTextViewに通信結果を表示させるため、observerOnにメインスレッドを指定します。
+  subscribeOnでObservable側（WebAPI処理）のスレッドを指定し、  
+　observerOnでObserver側（onSuccess, onError）のスレッドを指定します。  
+　今回はTextViewに通信結果を表示させるため、observerOnにメインスレッドを指定します。  
 
-　WeatherClient.getForecastではdisposeBagを引数で取得している目的は、
-　これはメソッドの呼び出し元（ViewController）のデストラクタ時に、購読解除させるためです。
+　WeatherClient.getForecastではdisposeBagを引数で取得している目的は、  
+　これはメソッドの呼び出し元（ViewController）のデストラクタ時に、購読解除させるためです。  
 　
 ```
 class WeatherClient {
@@ -295,11 +293,11 @@ class WeatherClient {
 }
 ```
 
-3. 通信処理を呼び出すViewController
-　WeatherClientでワンクッション挟むことで、RxSwiftの購読処理の流れを意識せずにコーディングできます。
-　また、通信成功クロージャがメインスレッドで実行されることにより、
-　ViewControllerではスレッドを意識する必要がなくなるため、
-　サブスレッドでUIを参照するリスクが下がると思います。
+3. 通信処理を呼び出すViewController  
+　WeatherClientでワンクッション挟むことで、RxSwiftの購読処理の流れを意識せずにコーディングできます。  
+　また、通信成功クロージャがメインスレッドで実行されることにより、  
+　ViewControllerではスレッドを意識する必要がなくなるため、  
+　サブスレッドでUIを参照するリスクが下がると思います。  
 
 ```
 class TopViewController: UIViewController {
