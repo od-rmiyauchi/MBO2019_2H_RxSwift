@@ -209,7 +209,7 @@ return Observable.from(numArray)
 ```
 
 ### 通信処理の例（Single）
-今回は連続でリクエストを投げない場合、ObservableよりもSIngleが適しています。  
+連続でリクエストを投げない場合、ObservableよりもSingleが適しています。  
 ObservableはonNextが複数回実行されることを想定していますが、SingleはonSuccess/onErrorの２パターンのみです。  
 そのために１回だけリクエストを投げるようなAPIでは、SingleのほうがonNextを書かなくて済むので実装が簡単です。  
 
