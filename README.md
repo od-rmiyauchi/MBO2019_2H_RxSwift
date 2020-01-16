@@ -13,7 +13,7 @@ Reactive ExtensionsをSwiftのライブラリであり、データバインド�
 このようにRxSwiftだけではなく、他のライブラリも併用すると開発効率が向上します。
 
 ## 購読解除  
-モバイルアプリ開発では画面破棄時など、オブジェクト破棄時に購読中の処理を解除したいシーンが多いです。 
+モバイルアプリ開発では画面破棄時など、オブジェクト破棄時に購読中の処理を解除したいシーンが多いです。  
 基本的にはObservableごとにdisposeメソッドを呼ぶことで購読解除できます（実行中の処理を停止）が、  
 画面破棄時の購読解除を画面ごと、購読処理ごとに実装することは冗長となってしまいます。  
 そこでRxSwiftではオブジェクトの破棄時にまとめて購読解除する仕組みが用意されており、それがDisposeBagです。  
@@ -22,7 +22,9 @@ Reactive ExtensionsをSwiftのライブラリであり、データバインド�
 
 ## イベント処理
 ### Button
-ボタンタップイベント
+ボタンタップイベント  
+画面上に複数のボタンがある場合、タップイベントの定義を一箇所にまとめてコーディングできます。  
+それにより可読性が向上するようです。  
 ```
 tapButton.rx.tap
 	.subscribe { _ in
@@ -31,7 +33,8 @@ tapButton.rx.tap
 ```
 
 ### TextField
-TextField.txtのKVO
+TextField.textの変化  
+他のUIのイベント処理実装をRxSwiftで統一するなら、Delegateを使うよりも見やすくなります。  
 ```
 inputTextField.rx.text
 	.subscribe { event in
@@ -41,7 +44,7 @@ inputTextField.rx.text
 ```
 
 ### Notification
-Notificationの受信設定
+Notificationの受信設定  
 ```
 let notificationName = Notification.Name(rawValue: "NotificationSend")
 NotificationCenter.default.rx.notification(notificationName)
@@ -58,7 +61,7 @@ NotificationCenter.default.post(name: notificationName, object: "テスト")
 ### RxKeyboard
 RxKeyboardライブラリを使用すると、キーボードの表示時のViewのサイズや位置調整を簡単に実現できます。  
 下記では、キーボード表示時にViewの高さをキーボードのサイズだけ縮小します。  
-※ サードパーティキーボードの動作は未確認
+※ サードパーティキーボードの動作は未確認  
 ```
 // サイズ調整したいViewのAutoLayout制約
 @IBOutlet weak var stacktViewBottomConstraint: NSLayoutConstraint!
@@ -76,8 +79,8 @@ func setRxKeyboard() {
 
 ## データバインド
 ### UI同士
-TextField.txtとLabel.txtをバインド  
-orEmptyでTextFieldのテキストが空でない条件を追加できます  
+TextField.textとLabel.textをバインド（TextFieldの入力文字列をLabelに表示）  
+orEmptyでTextField.textが空文字やnilの場合は処理させないようにしています。 
 ```
 bindingTextField.rx.text.orEmpty
 	.bind(to: bindingLabel.rx.text)
@@ -85,7 +88,7 @@ bindingTextField.rx.text.orEmpty
 ```
 
 二つのUIを監視することも可能  
-下記では、二つのTextFieldの値を連結し(combine)、1つの文字列に変換した(map)後に、Labelに表示しています(bind)
+下記では、二つのTextFieldの値を連結し(combine)、1つの文字列に変換した(map)後に、Labelに表示しています(bind)  
 ```
 Observable
 	// combineLatestで二つのTextFieldを監視し、文字列を連結します
@@ -100,7 +103,7 @@ Observable
 
 ### 変数をUIにバインド
 変数をバインドすることも可能  
-下記では、ViewModel.count変数の値(0以外)をLabelにバインドしています
+下記では、ViewModel.count変数の値(0以外)をLabelにバインドしています  
 ```
 viewModel.count
 	// 0の場合は表示しない
