@@ -2,21 +2,21 @@
 
 ## RxSwiftとは？
 Reactive ExtensionsをSwiftのライブラリであり、データバインドが簡単に書け、非同期処理も実装しやすい特徴があります。  
-DelegateやKVOで記述していた箇所がRxSwiftで実装できるようになります。  
+例えばDelegateやKVOで記述していた箇所がRxSwiftで実装できるようになります。  
 　https://github.com/ReactiveX/RxSwift/blob/master/Documentation/Why.md  
 ※ Xcode11に導入されたCombineがありますが、対象がiOS13以降なので現状はRxSwiftが良いと思われます。  
 
-今回はReactive Extensionsの説明を省略し、RxSwiftの基本的な使い方に焦点を当てて説明します。
+今回はReactive Extensionsの説明を省略し、RxSwiftの基本的な使い方に焦点を当てて説明します。  
 ※ 説明に使用したソースは、全て"RxSwiftDemo"プロジェクトにございます。
 
 また、イベント処理やデータバインドをRxSwiftで行うときはRxCocoaを使用すると簡単に実装できます。  
 このようにRxSwiftだけではなく、他のライブラリも併用すると開発効率が向上します。
 
 ## 購読解除  
-モバイルアプリ開発では画面破棄時など、オブジェクト破棄時に購読中の処理を購読解除したいシーンが多いです。 
-基本的にはDisposableのdisposeメソッドを呼ぶことで購読解除します（実行中の処理を停止）が、
+モバイルアプリ開発では画面破棄時など、オブジェクト破棄時に購読中の処理を解除したいシーンが多いです。 
+基本的にはObservableごとにdisposeメソッドを呼ぶことで購読解除できます（実行中の処理を停止）が、
 画面破棄時の購読解除を画面ごと、購読処理ごとに実装することは冗長となってしまいます。
-そこでRxSwiftではオブジェクトの破棄時に実行中の購読処理をまとめて解除する仕組みが用意されており、それがDisposeBagです。  
+そこでRxSwiftではオブジェクトの破棄時にまとめて購読解除する仕組みが用意されており、それがDisposeBagです。  
 画面破棄時に購読終了させる場合は、ViewControllerのクラス定数としてdisposeBagを宣言し、それをObservableに指定します。  
 ただしDisposeBagを所持しているクラスがメモリに残り続ける場合（Singletonなど）は、自動で購読解除されないので注意が必要です。  
 
@@ -127,7 +127,7 @@ viewModel.count
 …
 5 -> ObservableEntity (num=5)
 ```
-この変換処理をサブスレッドで動作させます。  
+この変換処理をサブスレッドで動作させ、結果をメインスレッドで出力させます。  
 ※ 本来はリスト作成をfrom関数、変換処理をmap関数で十分ですが（下記別解を参照）、今回はあえてObservable生成から実装します。  
 
 ```
@@ -193,7 +193,7 @@ class ObservableExample {
 ② ここでは関数の引数で受け取ったリスト内の整数をEntityオブジェクトに変換する処理を非同期にしています。  
 ③ 一つの要素に対して処理が完了するたびに、onNextを呼びます。こうすることでObserverに1つの要素の処理が完了したことが通知されます。  
 ④ 最後に全要素の処理が完了したことをonCompletedでObserverに通知します。  
-また、下記のソースに記述しておりませんが、エラーが生じた場合はonErrorで通知します。  
+また、ソースに記述しておりませんが、エラーが生じた場合はonErrorで通知します。  
 
 - Observer側の実装  
 ⑤ Observable側の処理（今回はObservable.createで実装した変換処理）のスレッドをサブスレッドに指定  
@@ -215,7 +215,7 @@ ObservableはonNextが複数回実行されることを想定していますが�
 
 以下は天気予報APIを非同期で実行し、結果をTextViewに表示する例です。  
 1. まずWeatherAPI.createForecastObservableでSingleの生成を実装します。  
-　そしてこのSingleに対して非同期で実行したいWebAPI処理を実装します。  
+ そしてこのSingleに対して非同期で実行したいWebAPI処理を実装します。  
 
 ```
 class WeatherAPI {
@@ -252,15 +252,15 @@ class WeatherAPI {
 ```
 
 2. WeatherClient.getForecastに、1で実装したSingleの購読処理を実装します。  
-　購読処理をViewController側に実装すると冗長的になってしまい、可読性が下がると思われます。  
-　そこで、成功と失敗用のクロージャを引数とする関数を用意し、その中で購読処理を実行するようにしました。  
+ 購読処理をViewController側に実装すると冗長的になってしまい、可読性が下がると思われます。  
+ そこで、成功と失敗用のクロージャを引数とする関数を用意し、その中で購読処理を実行するようにしました。  
 
-  subscribeOnでObservable側（WebAPI処理）のスレッドを指定し、  
-　observerOnでObserver側（onSuccess, onError）のスレッドを指定します。  
-　今回はTextViewに通信結果を表示させるため、observerOnにメインスレッドを指定します。  
+ subscribeOnでObservable側（WebAPI処理）のスレッドを指定し、  
+ observerOnでObserver側（onSuccess, onError）のスレッドを指定します。  
+ 今回はTextViewに通信結果を表示させるため、observerOnにメインスレッドを指定します。  
 
-　WeatherClient.getForecastではdisposeBagを引数で取得している目的は、  
-　これはメソッドの呼び出し元（ViewController）のデストラクタ時に、購読解除させるためです。  
+ WeatherClient.getForecastではdisposeBagを引数で取得している目的は、  
+ これはメソッドの呼び出し元（ViewController）のデストラクタ時に、購読解除させるためです。  
 　
 ```
 class WeatherClient {
@@ -296,10 +296,9 @@ class WeatherClient {
 ```
 
 3. 通信処理を呼び出すViewController  
-　WeatherClientでワンクッション挟むことで、RxSwiftの購読処理の流れを意識せずにコーディングできます。  
-　また、通信成功クロージャがメインスレッドで実行されることにより、  
-　ViewControllerではスレッドを意識する必要がなくなるため、  
-　サブスレッドでUIを参照するリスクが下がると思います。  
+ WeatherClientでワンクッション挟むことで、RxSwiftの購読処理の流れを意識せずにコーディングできます。  
+ また、クロージャがメインスレッドで実行することで、ViewControllerではスレッドを意識する必要がありません。  
+ それによりサブスレッドでUIを参照するリスクが下がり、品質が向上すると考えられます。  
 
 ```
 class TopViewController: UIViewController {
