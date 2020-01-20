@@ -76,10 +76,17 @@ private extension BindExample {
     
     /// バインディングを設定
     func setBinding() {
+        // 実際にUIとバインディングするのなら、コメントアウト箇所のようにDriverを使用したほうが良い
+        
         // UIの値同士をバインド
         bindingTextField.rx.text.orEmpty
             .bind(to: bindingLabel.rx.text)
             .disposed(by: disposeBag)
+        /*
+        bindingTextField.rx.text.orEmpty.asDriver()
+            .drive(bindingLabel.rx.text)
+            .disposed(by: disposeBag)
+        */
         
         // 二つのTextFieldをバインド
         Observable
@@ -90,6 +97,17 @@ private extension BindExample {
             .map { "Greetings, \($0)" }
             .bind(to: bindingNameLabel.rx.text)
             .disposed(by: disposeBag)
+        /*
+        Driver
+            // combineLatestで二つのTextFieldを監視し、文字列を連結する
+            .combineLatest(
+                bindingFirstNameTextField.rx.text.asDriver(),
+                bindingLastNameTextField.rx.text.asDriver()) { "\($0 ?? "") \($1 ?? "")" }
+            // ↑で連結した文字列をmapで変換する
+            .map { "Greetings, \($0)" }
+            .drive(bindingNameLabel.rx.text)
+            .disposed(by: disposeBag)
+        */
         
         // 変数のUIにバインド
         viewModel.count
@@ -99,6 +117,15 @@ private extension BindExample {
             .map { "\($0)に変わりました" }
             .bind(to: bindCountUpLabel.rx.text)
             .disposed(by: disposeBag)
+        /*
+        // 以下ではエラー発生時は0を返すようにする
+        viewModel.count
+            .asDriver(onErrorJustReturn: 0)
+            .filter { $0 != 0 }
+            .map { "\($0)に変わりました" }
+            .drive(bindCountUpLabel.rx.text)
+            .disposed(by: disposeBag)
+        */
         // 今回はUIButtonのイベントにしていますが、Modelで値を変更することを想定（MVVM）
         bindCountUpButton.rx.tap
             .subscribe { [unowned self] _ in
