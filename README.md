@@ -114,6 +114,23 @@ viewModel.count
 	.disposed(by: disposeBag)
 ```
 
+### Driver
+Driverを使用すると下記を行なってくれるため、ViewController側で購読する場合はDriverを使用したほうが良いです。
+- メインスレッドで通知
+- エラー処理
+
+以下は上記例のviewModel.countをDriverに置き換えた例です。
+```
+viewModel.count
+	// Driverに変換。引数のonErrorJustReturnでエラー生じたときに0を使うよう指定
+	.asDriver(onErrorJustReturn: 0)
+	.filter { $0 != 0 }
+	.map { "\($0)に変わりました" }
+	// bindではなくdrive
+	.drive(bindCountUpLabel.rx.text)
+	.disposed(by: disposeBag)
+```
+
 ## 非同期処理
 ### Hot / Cold
 これまでのイベント処理やデータバインドは、値が変化したら購読処理が即実行されます。  
