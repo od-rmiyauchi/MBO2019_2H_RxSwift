@@ -234,6 +234,7 @@ ObservableはonNextが複数回実行されることを想定していますが�
 そのために１回だけリクエストを投げるようなAPIでは、SingleのほうがonNextを書かなくて済むので実装が簡単です。  
 
 以下は天気予報APIを非同期で実行し、結果をTextViewに表示する例です。  
+Observableの生成、購読処理、結果表示処理といった順に説明します。  
 1. まずWeatherAPI.createForecastObservableでSingleの生成を実装します。  
  そしてこのSingleに対して非同期で実行したいWebAPI処理を実装します。  
 
@@ -241,7 +242,7 @@ ObservableはonNextが複数回実行されることを想定していますが�
 class WeatherAPI {
     static func createForecastObservable(_ url: String, _ parameters: [String:Any]) -> Single<WeatherEntity> {
         return Single<WeatherEntity>.create { (observer) -> Disposable in
-			// ここに非同期で実行したい処理を記述
+            // ここに非同期で実行したい処理を記述
             Alamofire
                 .request(url, method: .get, parameters: parameters)
                 .response(completionHandler: { (response) in
@@ -294,7 +295,7 @@ class WeatherClient {
 
         let parameters = ["city": cityId]
         
-		// Observableを取得
+        // Observableを取得
         let observable = WeatherAPI.createForecastObservable(WeatherConstant.forecastUrl,
                                                              parameters)
 
