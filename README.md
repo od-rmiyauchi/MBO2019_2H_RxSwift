@@ -348,3 +348,10 @@ private extension ForecastViewController {
 }
 ```
 
+## 参考書籍・サイト
+- 比較して学ぶRxSwift入門  
+  https://www.amazon.co.jp/比較して学ぶRxSwift入門-技術の泉シリーズ（NextPublishing）-髙橋-凌-ebook/dp/B07LGMNXS3
+- ReactiveX/RxSwift
+  https://github.com/ReactiveX/RxSwift/blob/master/Documentation/Why.md  
+- RxSwift 再入門  
+  https://qiita.com/usamik26/items/444d6dd7386b2949c06b
